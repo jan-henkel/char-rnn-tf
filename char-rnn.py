@@ -90,17 +90,17 @@ sess = tf.InteractiveSession(graph=g)
 text_data,encode,decode = textdata_load(args.path,seq_length=args.seq_length,val_frac=args.val_frac,stride=args.stride)
 
 num_train = len(text_data['X_train'])
+num_val = len(text_data['X_val'])
 vocab_length = len(text_data['charmap'])
 
-#mask_1 = np.repeat(a=(np.arange(args.seq_length).reshape(1,-1)).astype(np.float32),axis=0,repeats=args.batch_size)*args.seq_length/(np.arange(args.seq_length).sum())
-#mask_2 = np.repeat(a=np.ones([1,args.seq_length]).astype(np.float32),axis=0,repeats=args.batch_size)
+print("num_train:",num_train,"num_val:",num_val,"vocab_length:",vocab_length,"args:",args)
 
 with g.as_default():
     with tf.variable_scope('input_layer'):
         x = tf.placeholder(dtype=tf.int32,shape=[None,args.seq_length],name="x")
         y = tf.placeholder(dtype=tf.int32,shape=[None,args.seq_length],name="y")
+        init_state = tf.placeholder(dtype=tf.float32,shape=[3],name="init_state")
         lr = tf.placeholder(dtype=tf.float32,shape=[],name="learning_rate")
-        #loss_mask = tf.placeholder(dtype=tf.float32,shape=[None,args.seq_length],name="loss_mask")
         temp = tf.placeholder(dtype=tf.float32,name="temperature")
         keep_prob = tf.placeholder(dtype=tf.float32,name="keep_prob")
     if(args.embedding_dim is not None):
@@ -121,14 +121,14 @@ with g.as_default():
             rnn_type = {'lstm':tf.contrib.rnn.BasicLSTMCell,'rnn':tf.contrib.rnn.BasicRNNCell,'gru':tf.contrib.rnn.GRUCell}
             cells = [tf.contrib.rnn.DropoutWrapper(rnn_type(args.hidden_dim),input_keep_prob=keep_prob) for _ in range(args.num_layers)]
         stacked_lstm = tf.contrib.rnn.MultiRNNCell(cells=cells)
-        init_state = stacked_lstm.zero_state(batch_size=tf.shape(x)[0],dtype=tf.float32)
-        drrn_out,drrn_final_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_emb,scope="drnn",dtype=tf.float32)#,initial_state=init_state
+        drnn_out,drnn_final_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_emb,scope="drnn",dtype=tf.float32)
+        #drnn_out_2,drnn_final_state_2 = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_emb,scope="drnn",initial_state=init_state)
     with tf.variable_scope('output_layer'):
         w_out = tf.get_variable(dtype=tf.float32,shape=[args.hidden_dim,vocab_length],name="output_weights")
         b_out = tf.get_variable(dtype=tf.float32,shape=[vocab_length],name="output_biases")
-        scores = tf.tensordot(drrn_out,w_out,axes=([2],[0]))
+        scores = tf.tensordot(drnn_out,w_out,axes=([2],[0]))
     with tf.variable_scope('loss'):
-        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y,logits=scores))#*loss_mask)
+        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y,logits=scores))
         optim = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss)
     with tf.variable_scope(rnn_scope) as scope:
         counter = tf.constant(value=0,dtype=tf.int32)
@@ -136,12 +136,12 @@ with g.as_default():
         x_sample_prime_text = tf.placeholder(dtype=tf.int64,shape=[1,None],name="x_sample_prime_text")
         x_sample_prime_text_emb = embed(x_sample_prime_text)
         scope.reuse_variables()
-        prime_drrn_out,prime_drrn_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_sample_prime_text_emb,dtype=tf.float32,scope="drnn")
-        prime_scores = tf.matmul(prime_drrn_out[:,-1,:],w_out)
+        prime_drnn_out,prime_drnn_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_sample_prime_text_emb,dtype=tf.float32,scope="drnn")
+        prime_scores = tf.matmul(prime_drnn_out[:,-1,:],w_out)
         sample = tf.multinomial(prime_scores/temp,1)[0]
         samples = tf.TensorArray(dtype=tf.int64,size=sample_length,element_shape=[1],clear_after_read=False)
         samples = samples.write(0,sample)
-        state = prime_drrn_state
+        state = prime_drnn_state
         
         def body_(counter,samples,state):
             last_sample = samples.read(counter)
