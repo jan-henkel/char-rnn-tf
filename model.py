@@ -15,7 +15,7 @@ class Model:
 
             #placeholders for data, training- and sampling parameters
             with tf.variable_scope('input_layer'):
-                self.x = tf.placeholder(dtype=tf.int32,shape=[None,None],name="x")
+                self.x = tf.placeholder(dtype=tf.uint8,shape=[None,None],name="x")
                 self.y = tf.placeholder(dtype=tf.int32,shape=[None,None],name="y")
                 self.lr = tf.placeholder(dtype=tf.float32,shape=[],name="learning_rate")
                 self.temp = tf.placeholder(dtype=tf.float32,name="temperature")
@@ -58,13 +58,13 @@ class Model:
             with tf.variable_scope(rnn_scope) as scope:
                 counter = tf.constant(value=0,dtype=tf.int32)
                 self.sample_length = tf.placeholder(dtype=tf.int32,shape=[],name="sample_length")
-                self.x_sample_prime_text = tf.placeholder(dtype=tf.int64,shape=[1,None],name="x_sample_prime_text")
+                self.x_sample_prime_text = tf.placeholder(dtype=tf.int32,shape=[1,None],name="x_sample_prime_text")
                 x_sample_prime_text_emb = embed(self.x_sample_prime_text)
                 scope.reuse_variables()
                 prime_drnn_out,prime_drnn_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_sample_prime_text_emb,dtype=tf.float32,scope="drnn")
                 prime_scores = tf.matmul(prime_drnn_out[:,-1,:],w_out)
-                sample = tf.multinomial(prime_scores/self.temp,1)[0]
-                samples = tf.TensorArray(dtype=tf.int64,size=self.sample_length,element_shape=[1],clear_after_read=False)
+                sample = tf.cast(tf.multinomial(prime_scores/self.temp,1)[0],tf.uint8)
+                samples = tf.TensorArray(dtype=tf.uint8,size=self.sample_length,element_shape=[1],clear_after_read=False)
                 samples = samples.write(0,sample)
                 state = prime_drnn_state
 
@@ -74,7 +74,7 @@ class Model:
                     scope.reuse_variables()
                     h,new_state = stacked_lstm(inputs=last_sample_emb,state=state,scope="drnn/multi_rnn_cell")
                     new_scores = tf.matmul(h,w_out)
-                    new_sample = tf.multinomial(new_scores/self.temp,1)[0]
+                    new_sample = tf.cast(tf.multinomial(new_scores/self.temp,1)[0],tf.uint8)
                     samples = samples.write(counter+1,new_sample)
                     return counter+1,samples,new_state
                 
@@ -100,7 +100,7 @@ class Model:
         
     def train(self,data,train_args,save_args):
         num_train = len(data['X_train'])
-        
+       
         def get_batch():
             idx = np.random.choice(num_train,train_args.batch_size)
             return data['X_train'][idx],data['y_train'][idx]

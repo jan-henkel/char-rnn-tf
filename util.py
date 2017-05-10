@@ -20,7 +20,7 @@ def preprocess(args):
         txt = f.read()
     
     charmap = sorted(list(set(txt)))
-    inv_charmap = {c:i for i,c in enumerate(charmap)}
+    inv_charmap = {c:np.uint8(i) for i,c in enumerate(charmap)}
     
     segments = [encode(txt[i:i+args.seq_length+1],inv_charmap) for i in range(0,len(txt)-args.seq_length-1,args.stride)]
     
@@ -28,6 +28,7 @@ def preprocess(args):
     y = np.array([s[1:] for s in segments])
     X_train,X_val = split_array(X,[(1-args.val_frac),args.val_frac])
     y_train,y_val = split_array(y,[(1-args.val_frac),args.val_frac])
+
     if args.stride<args.seq_length:
         X_val=X_val[((args.seq_length-1)//args.stride)-1:]
         y_val=y_val[((args.seq_length-1)//args.stride)-1:]
