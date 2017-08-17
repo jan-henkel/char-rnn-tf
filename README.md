@@ -14,8 +14,8 @@ train.py [-h] [--seq-len SEQ_LENGTH] [--stride STRIDE]
                 [--val-frac VAL_FRAC] [--reprocess] [--type {lstm,rnn,gru}]
                 [--layers NUM_LAYERS] [--layer-norm LAYER_NORM]
                 [--embed-dim EMBEDDING_DIM] [--hidden-dim HIDDEN_DIM]
-                [--save-dir SAVE_DIR] [--restore-last RESTORE_LAST]
-                [--clear-model] [--iter ITERATIONS] [--lr LEARNING_RATE]
+                [--save-dir SAVE_DIR] [--restore-last] [--clear-model]
+                [--iter ITERATIONS] [--lr LEARNING_RATE]
                 [--batch-size BATCH_SIZE] [--dropout DROPOUT_KEEP_PROB]
                 [--print-every PRINT_EVERY]
                 PATH
@@ -49,8 +49,7 @@ model parameters:
 
 model save and restore settings:
   --save-dir SAVE_DIR   optional, defaults to path derived from input file
-  --restore-last RESTORE_LAST
-                        restore last model rather than best performing model.
+  --restore-last        restore last model rather than best performing model.
                         does nothing if no previous model is present
   --clear-model         clear previous model parameters
 
@@ -75,7 +74,7 @@ python sample.py '/path/to/input.txt' --prime-text 'The meaning of life is '
 
 General usage as described by the help message:
 ```lang-none
-sample.py [-h] [--save-dir SAVE_DIR] [--restore-last RESTORE_LAST]
+sample.py [-h] [--save-dir SAVE_DIR] [--restore-last]
                  [--len SAMPLE_LENGTH] [--prime-text PRIME_TEXT]
                  [--temp TEMPERATURE]
                  path
@@ -89,8 +88,7 @@ optional arguments:
 model restore settings:
   --save-dir SAVE_DIR   model save directory, defaults to path derived from
                         input file
-  --restore-last RESTORE_LAST
-                        restore last model rather than best performing model
+  --restore-last        restore last model rather than best performing model
 
 sample settings:
   --len SAMPLE_LENGTH   sample length

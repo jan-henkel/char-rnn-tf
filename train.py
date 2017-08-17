@@ -29,7 +29,7 @@ model_group.add_argument('--hidden-dim',dest='hidden_dim',type=int,default=92,he
 save_parser = argparse.ArgumentParser(add_help=False)
 save_group=save_parser.add_argument_group('model save and restore settings')
 save_group.add_argument('--save-dir',dest='save_dir',type=str,default=None,help='optional, defaults to path derived from input file')
-save_group.add_argument('--restore-last',dest='restore_last',type=bool,default=False,help='restore last model rather than best performing model. does nothing if no previous model is present')
+save_group.add_argument('--restore-last',dest='restore_last',action='store_const',const=True,default=False,help='restore last model rather than best performing model. does nothing if no previous model is present')
 save_group.add_argument('--clear-model',dest='clear',action='store_const',const=True,default=False,help='clear previous model parameters')
 
 #optimization settings

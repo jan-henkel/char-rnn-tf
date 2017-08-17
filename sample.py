@@ -14,7 +14,7 @@ input_parser.add_argument('path',type=str,default='./input.txt',help='path of th
 save_parser = argparse.ArgumentParser(add_help=False)
 save_group=save_parser.add_argument_group('model restore settings')
 save_group.add_argument('--save-dir',dest='save_dir',type=str,default=None,help='model save directory, defaults to path derived from input file')
-save_group.add_argument('--restore-last',dest='restore_last',type=bool,default=False,help='restore last model rather than best performing model')
+save_group.add_argument('--restore-last',dest='restore_last',action='store_const',const=True,default=False,help='restore last model rather than best performing model')
 
 #sample settings
 sample_parser = argparse.ArgumentParser(add_help=False)
