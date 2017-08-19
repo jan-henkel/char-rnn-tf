@@ -34,14 +34,14 @@ class Model:
                 x_emb = embed(self.x)
 
             #rnn layers
-            with tf.variable_scope('rnn_layer') as rnn_scope:
+            with tf.variable_scope('rnn_layer'):
                 if args.rnn_type == 'lstm' and args.layer_norm:
                     cells = [tf.contrib.rnn.LayerNormBasicLSTMCell(args.hidden_dim,dropout_keep_prob=self.keep_prob) for _ in range(args.num_layers)]
                 else:
                     rnn_cell = {'lstm':tf.contrib.rnn.BasicLSTMCell,'rnn':tf.contrib.rnn.BasicRNNCell,'gru':tf.contrib.rnn.GRUCell}[args.rnn_type]
                     cells = [tf.contrib.rnn.DropoutWrapper(rnn_cell(args.hidden_dim),input_keep_prob=self.keep_prob) for _ in range(args.num_layers)]
                 stacked_lstm = tf.contrib.rnn.MultiRNNCell(cells=cells)
-                drnn_out,drnn_final_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_emb,scope="drnn",dtype=tf.float32)
+                drnn_out,drnn_final_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_emb,dtype=tf.float32,scope="drnn")
 
             #output layer
             with tf.variable_scope('output_layer'):
@@ -55,13 +55,12 @@ class Model:
                 self.optim = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(self.loss)
 
             #sampling loop
-            with tf.variable_scope(rnn_scope) as scope:
+            with tf.variable_scope('sample'):
                 counter = tf.constant(value=0,dtype=tf.int32)
                 self.sample_length = tf.placeholder(dtype=tf.int32,shape=[],name="sample_length")
                 self.x_sample_prime_text = tf.placeholder(dtype=tf.int64,shape=[1,None],name="x_sample_prime_text")
                 x_sample_prime_text_emb = embed(self.x_sample_prime_text)
-                scope.reuse_variables()
-                prime_drnn_out,prime_drnn_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_sample_prime_text_emb,dtype=tf.float32,scope="drnn")
+                prime_drnn_out,prime_drnn_state = tf.nn.dynamic_rnn(cell=stacked_lstm,inputs=x_sample_prime_text_emb,dtype=tf.float32)
                 prime_scores = tf.matmul(prime_drnn_out[:,-1,:],w_out)
                 sample = tf.multinomial(prime_scores/self.temp,1)[0]
                 samples = tf.TensorArray(dtype=tf.int64,size=self.sample_length,element_shape=[1],clear_after_read=False)
@@ -71,8 +70,7 @@ class Model:
                 def body_(counter,samples,state):
                     last_sample = samples.read(counter)
                     last_sample_emb = embed(last_sample)
-                    scope.reuse_variables()
-                    h,new_state = stacked_lstm(inputs=last_sample_emb,state=state,scope="drnn/multi_rnn_cell")
+                    h,new_state = stacked_lstm(inputs=last_sample_emb,state=state)
                     new_scores = tf.matmul(h,w_out)
                     new_sample = tf.multinomial(new_scores/self.temp,1)[0]
                     samples = samples.write(counter+1,new_sample)
