@@ -12,10 +12,10 @@ General usage as described by the help message:
 ```lang-none
 train.py [-h] [--seq-len SEQ_LENGTH] [--stride STRIDE]
                 [--val-frac VAL_FRAC] [--reprocess] [--type {lstm,rnn,gru}]
-                [--layers NUM_LAYERS] [--layer-norm LAYER_NORM]
+                [--layers NUM_LAYERS] [--layer-norm]
                 [--embed-dim EMBEDDING_DIM] [--hidden-dim HIDDEN_DIM]
-                [--save-dir SAVE_DIR] [--restore-last] [--clear-model]
-                [--iter ITERATIONS] [--lr LEARNING_RATE]
+                [--nobias] [--save-dir SAVE_DIR] [--restore-last]
+                [--clear-model] [--iter ITERATIONS] [--lr LEARNING_RATE]
                 [--batch-size BATCH_SIZE] [--dropout DROPOUT_KEEP_PROB]
                 [--print-every PRINT_EVERY]
                 PATH
@@ -38,14 +38,14 @@ model parameters:
   --type {lstm,rnn,gru}
                         rnn type
   --layers NUM_LAYERS   number of layers
-  --layer-norm LAYER_NORM
-                        use layer normalization. has no effect on anything
+  --layer-norm          use layer normalization. has no effect on anything
                         other than lstm
   --embed-dim EMBEDDING_DIM
                         embedding dimension. defaults to one-hot encoding if
                         not specified
   --hidden-dim HIDDEN_DIM
                         rnn hidden layer dimension
+  --nobias              don't learn bias for character scores
 
 model save and restore settings:
   --save-dir SAVE_DIR   optional, defaults to path derived from input file
@@ -78,6 +78,8 @@ sample.py [-h] [--save-dir SAVE_DIR] [--restore-last]
                  [--len SAMPLE_LENGTH] [--prime-text PRIME_TEXT]
                  [--temp TEMPERATURE]
                  path
+
+Sample from a previously trained RNN model
 
 positional arguments:
   path                  path of the input file
