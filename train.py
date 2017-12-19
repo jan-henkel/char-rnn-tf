@@ -44,10 +44,10 @@ train_group.add_argument('--print-every',dest='print_every',type=int,default=100
 help_message_parser = argparse.ArgumentParser(description="Train a character-level recurrent neural network on an input text",parents=[input_parser,model_parser,save_parser,train_parser])
 help_message_parser.parse_args()
 
-input_args,rest = input_parser.parse_known_args()
-model_args,rest = model_parser.parse_known_args(rest)
+model_args,rest = model_parser.parse_known_args()
 save_args,rest = save_parser.parse_known_args(rest)
-train_args = train_parser.parse_args(rest)
+train_args,rest = train_parser.parse_known_args(rest)
+input_args = input_parser.parse_args(rest)
 
 if save_args.save_dir is None:
     save_args.save_dir = os.path.splitext(input_args.path)[0]+"_save"
