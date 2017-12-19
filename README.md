@@ -79,8 +79,6 @@ sample.py [-h] [--save-dir SAVE_DIR] [--restore-last]
                  [--temp TEMPERATURE]
                  path
 
-Sample from a previously trained RNN model
-
 positional arguments:
   path                  path of the input file
 
