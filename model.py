@@ -46,8 +46,10 @@ class Model:
             #output layer
             with tf.variable_scope('output_layer'):
                 w_out = tf.get_variable(dtype=tf.float32,shape=[args.hidden_dim,vocab_length],name="output_weights")
-                b_out = tf.get_variable(dtype=tf.float32,shape=[vocab_length],name="output_biases")
                 scores = tf.tensordot(drnn_out,w_out,axes=([2],[0]))
+                if args.bias:
+                    b_out = tf.get_variable(dtype=tf.float32,shape=[vocab_length],name="output_biases")
+                    scores = scores+b_out
 
             #loss
             with tf.variable_scope('loss'):

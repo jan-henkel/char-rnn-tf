@@ -21,9 +21,10 @@ model_parser = argparse.ArgumentParser(add_help=False)
 model_group=model_parser.add_argument_group('model parameters')
 model_group.add_argument('--type',dest='rnn_type',choices=['lstm','rnn','gru'],default='lstm',help='rnn type')
 model_group.add_argument('--layers',dest='num_layers',type=int,default=2,help='number of layers')
-model_group.add_argument('--layer-norm',dest='layer_norm',type=bool,default=False,help='use layer normalization. has no effect on anything other than lstm')
+model_group.add_argument('--layer-norm',dest='layer_norm',action='store_const',const=True,default=False,help='use layer normalization. has no effect on anything other than lstm')
 model_group.add_argument('--embed-dim',dest='embedding_dim',type=int,default=None,help='embedding dimension. defaults to one-hot encoding if not specified')
 model_group.add_argument('--hidden-dim',dest='hidden_dim',type=int,default=92,help='rnn hidden layer dimension')
+model_group.add_argument('--nobias',dest='bias',action='store_const',const=False,default=True,help='don\'t learn bias for character scores')
 
 #model save and restore settings
 save_parser = argparse.ArgumentParser(add_help=False)
